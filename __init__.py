@@ -67,7 +67,6 @@ def create_skill():
 
 class AnimeAliasHelper():
     def __init__(self):
-        super().__init__(self)
         self.jikan = Jikan()
     
     def name_matches_anime(self, name, anime_id):
