@@ -4,7 +4,15 @@ from jikanpy import Jikan
 
 class Mal(MycroftSkill):
     def __init__(self):
-        MycroftSkill.__init__(self)
+        super().__init__(self)
+
+    def initialize(self):
+        self.jikan = Jikan()
+        self.mal_username = self.settings.get('username')
+
+    def on_settings_changed(self):
+        self.mal_username = self.settings.get('username', False)
+        # self.trigger_time_display(show_time)
 
     def initialize(self):
         self.jikan = Jikan()
@@ -18,28 +26,29 @@ class Mal(MycroftSkill):
     def handle_mal(self, message):
         self.speak_dialog('mal')
 
-    #@intent_handler(IntentBuilder('ThankYouIntent').require('ThankYouKeyword'))
-    #@intent_handler('HowAreYou.intent')
     @intent_handler('next.episode.intent')
     def handle_next_episode_intent(self, message):
         self.log.info('next episode intent')
 
         if not self.mal_username:
             self.log.info('mal username not set')
-            self.speak_dialog('I don\'t know your mal username')
+            self.speak_dialog("I don't know your mal username")
             return
 
         show = message.data.get('show')
         if show is not None:
             animelist_watching = self.jikan.user(username=self.mal_username, request='animelist', argument='watching')
-            reply = "I couldn't find any info for {}".format(show)
+
+            reply =  str.format("I couldn't find any info for {}", show)
+            
             for anime in animelist_watching['anime']:
-                self.log.info("checking show id {}. title: '{}'".format(anime['mal_id'], anime['title']))
+                self.log.info(str.format("checking show id {}. title: '{}'", anime['mal_id'], anime['title']))
                 if anime['title'].lower().startswith(show):
-                   reply =  "The next episode is {} of {}".format(anime['watched_episodes'] + 1, anime['total_episodes'])
+                    reply =  str.format('The next episode of {} is {} of {}', anime['title'], anime['watched_episodes'] + 1, anime['total_episodes'])
+            
             self.speak_dialog(reply)
         else:
-            self.speak_dialog('I didn\'t catch the name of the show')
+            self.speak_dialog("I didn't catch the name of the show")
 
 
     # @intent_handler()
