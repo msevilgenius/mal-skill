@@ -1,14 +1,16 @@
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
 from jikanpy import Jikan
+import helpers
 
 USERNAME_SETTING_KEY = 'username'
 
 class Mal(MycroftSkill):
     def __init__(self):
-        super().__init__(self)
+        MycroftSkill.__init__(self)
 
     def initialize(self):
         self.jikan = Jikan()
+        self.alias_helper = helpers.AnimeAliasHelper()
         self.mal_username = self.settings.get(USERNAME_SETTING_KEY)
 
     def on_settings_changed(self):
@@ -22,17 +24,17 @@ class Mal(MycroftSkill):
             self.speak_dialog('username.not.set')
             return
 
-        show = message.data.get('show')
+        requested_anime = message.data.get('show')
 
-        if show is not None:
+        if requested_anime is not None:
             animelist_watching = self.jikan.user(username=self.mal_username, request='animelist', argument='watching')
             
             for anime in animelist_watching['anime']:
                 self.log.debug(str.format("checking show id {}. title: '{}'", anime['mal_id'], anime['title']))
-                if anime['title'].lower().startswith(show):
+                if self.alias_helper.name_matches_anime(requested_anime, anime['mal_id']):
                     self.speak_dialog('next.episode', {'show': anime['title'], 'ep_next': anime['watched_episodes'] + 1, 'ep_total': anime['total_episodes']})
             
-            self.speak_dialog('unknown.show', {'show': show})
+            self.speak_dialog('unknown.show', {'show': requested_anime})
         else:
             self.speak_dialog('show.entity.none')
 
