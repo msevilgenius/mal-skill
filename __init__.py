@@ -35,7 +35,8 @@ class Mal(MycroftSkill):
                 self.log.debug(str.format("checking show id {}. title: '{}'", anime['mal_id'], anime['title']))
                 if self.alias_helper.name_matches_anime(requested_anime, anime['mal_id']):
                     self.speak_dialog('next.episode', {'show': anime['title'], 'ep_next': anime['watched_episodes'] + 1, 'ep_total': anime['total_episodes']})
-            
+                    return
+
             self.speak_dialog('unknown.show', {'show': requested_anime})
         else:
             self.speak_dialog('show.entity.none')
@@ -107,6 +108,7 @@ class CachedJikan():
             def do_request():
                 return self._jikan.user(username=self._mal_username, request='animelist', argument='watching')
             self._animelist_watching = self._delay_request(do_request)
+            self._animelist_watching_time = time.time()
         return self._animelist_watching
 
 
