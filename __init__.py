@@ -1,7 +1,9 @@
 import re
 import time
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
+from mycroft.util import LOG
 from jikanpy import Jikan
+from jikanpy.exceptions import APIException
 
 
 USERNAME_SETTING_KEY = 'username'
@@ -105,10 +107,14 @@ class CachedJikan():
     
     def animelist_watching(self):
         if self._animelist_watching is None or time.time() - self._animelist_watching_time > 5 * 60:
-            def do_request():
-                return self._jikan.user(username=self._mal_username, request='animelist', argument='watching')
-            self._animelist_watching = self._delay_request(do_request)
-            self._animelist_watching_time = time.time()
+            try:
+                def do_request():
+                    return self._jikan.user(username=self._mal_username, request='animelist', argument='watching')
+                self._animelist_watching = self._delay_request(do_request)
+                self._animelist_watching_time = time.time()
+            except APIException as e:
+                LOG.error('exception getting watchlist')
+                LOG.error(e)
         return self._animelist_watching
 
 
@@ -119,7 +125,8 @@ class CachedJikan():
                     return self._jikan.anime(anime_id)
                 anime = self._delay_request(do_request)
                 self._animes[anime_id] = anime
-            except:
-                # todo: log line here
+            except APIException as e:
+                LOG.error(str.format('exception getting anime id:{}', anime_id))
+                LOG.error(e)
                 return None
         return self._animes[anime_id]
